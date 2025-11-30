@@ -1,3 +1,6 @@
+# Azure DevOps CI/CD Pipeline for UIT-Go Project
+# Self-hosted Agent Configuration - FIXED VERSION
+
 trigger:
   - main
   - master
@@ -33,34 +36,33 @@ stages:
               targetType: 'inline'
               script: |
                 Write-Host "=================================================="
-                Write-Host "SE360 Lab 6 - CI/CD Pipeline"
+                Write-Host "Environment Information"
                 Write-Host "=================================================="
-                Write-Host "Project: UIT-Go-Project"
                 Write-Host "Node version: $(node --version)"
                 Write-Host "NPM version: $(npm --version)"
-                Write-Host "Agent Name: $(env:AGENT_NAME)"
-                Write-Host "Build Number: $(env:BUILD_BUILDNUMBER)"
-                Write-Host "Build Date: $(Get-Date)"
+                Write-Host "Agent Name: $env:AGENT_NAME"
+                Write-Host "Agent OS: $env:AGENT_OS"
+                Write-Host "Build Number: $env:BUILD_BUILDNUMBER"
+                Write-Host "Build ID: $env:BUILD_BUILDID"
                 Write-Host "=================================================="
             displayName: 'Display Environment Info'
             continueOnError: true
           
-          # Step 4: Install dependencies (if package.json exists)
+          # Step 4: Install dependencies
           - task: PowerShell@2
             inputs:
               targetType: 'inline'
               script: |
                 if (Test-Path "package.json") {
-                  Write-Host "Found package.json - Installing dependencies..."
+                  Write-Host "Installing project dependencies..."
                   npm install
                 } else {
                   Write-Host "No package.json found - Skipping npm install"
-                  Write-Host "This is normal for simple demo projects"
                 }
             displayName: 'NPM Install Dependencies'
             continueOnError: true
           
-          # Step 5: Run build (if build script exists)
+          # Step 5: Run build
           - task: PowerShell@2
             inputs:
               targetType: 'inline'
@@ -68,7 +70,7 @@ stages:
                 if (Test-Path "package.json") {
                   $packageJson = Get-Content "package.json" | ConvertFrom-Json
                   if ($packageJson.scripts.build) {
-                    Write-Host "Running build script..."
+                    Write-Host "Running build process..."
                     npm run build
                   } else {
                     Write-Host "No build script defined - Skipping build"
@@ -79,7 +81,7 @@ stages:
             displayName: 'NPM Run Build'
             continueOnError: true
           
-          # Step 6: Run tests (if test script exists)
+          # Step 6: Run tests
           - task: PowerShell@2
             inputs:
               targetType: 'inline'
@@ -98,19 +100,7 @@ stages:
             displayName: 'NPM Run Tests'
             continueOnError: true
           
-          # Step 7: List project files
-          - task: PowerShell@2
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "=================================================="
-                Write-Host "Project Files:"
-                Write-Host "=================================================="
-                Get-ChildItem -Recurse -Depth 2 | Select-Object FullName
-                Write-Host "=================================================="
-            displayName: 'List Project Files'
-          
-          # Step 8: Create artifact
+          # Step 7: Create artifact
           - task: ArchiveFiles@2
             inputs:
               rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
@@ -120,27 +110,24 @@ stages:
               replaceExistingArchive: true
             displayName: 'Create Build Artifact'
           
-          # Step 9: Publish artifact
+          # Step 8: Publish artifact
           - task: PublishBuildArtifacts@1
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)'
               ArtifactName: 'drop'
               publishLocation: 'Container'
-            displayName: 'Publish Build Artifacts'
+            displayName: 'Publish Artifacts'
           
-          # Step 10: Success summary
+          # Step 9: Success summary
           - task: PowerShell@2
             inputs:
               targetType: 'inline'
               script: |
                 Write-Host "=================================================="
-                Write-Host "BUILD COMPLETED SUCCESSFULLY!"
+                Write-Host "BUILD SUCCESSFUL!"
                 Write-Host "=================================================="
-                Write-Host "SE360 Lab 6 - CI/CD Pipeline Execution Complete"
                 Write-Host "Pipeline completed at: $(Get-Date)"
-                Write-Host "Build ID: $(env:BUILD_BUILDID)"
-                Write-Host "Artifact created: uit-go-app-$(env:BUILD_BUILDID).zip"
-                Write-Host "All steps executed successfully!"
+                Write-Host "Artifact created: uit-go-app-$env:BUILD_BUILDID.zip"
                 Write-Host "=================================================="
             displayName: 'Build Success Summary'
 
@@ -157,10 +144,10 @@ stages:
               targetType: 'inline'
               script: |
                 Write-Host "=================================================="
-                Write-Host "DEPLOYMENT SIMULATION - SE360 Lab 6"
+                Write-Host "DEPLOYMENT SIMULATION"
                 Write-Host "=================================================="
                 Write-Host "Deploying UIT-Go application..."
-                Write-Host "Source: Build #$(env:BUILD_BUILDID)"
+                Write-Host "Source: Build #$env:BUILD_BUILDID"
                 Write-Host "Target Environment: Development"
                 Write-Host "Deployment started at: $(Get-Date)"
                 Write-Host ""
@@ -176,8 +163,8 @@ stages:
                 Write-Host "  [5/5] Health check..."
                 Start-Sleep -Seconds 1
                 Write-Host ""
-                Write-Host "✓ Deployment completed successfully!"
+                Write-Host "Deployment completed successfully!"
                 Write-Host "Application URL: http://uit-go-dev.azurewebsites.net"
                 Write-Host "Deployment finished at: $(Get-Date)"
                 Write-Host "=================================================="
-            displayName: 'Simulate Deployment Process'
+            displayName: 'Simulate Deployment'
