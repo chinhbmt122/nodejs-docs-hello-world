@@ -6,7 +6,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'Hosted Agent'
+  vmImage: windows-2019
 
 steps:
 - task: NodeTool@0
